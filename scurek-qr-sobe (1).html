@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ščurek — QR Kode Sob</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Jost',sans-serif; background:#1a0f00; padding:40px 20px 60px; }
+
+  h1 { font-family:'Cormorant Garamond',serif; font-size:32px; font-weight:300; color:#e8d5a3; text-align:center; letter-spacing:4px; margin-bottom:6px; }
+  .main-sub { text-align:center; font-size:11px; letter-spacing:4px; text-transform:uppercase; color:#c9a84c; opacity:0.7; margin-bottom:48px; }
+
+  .location-block { margin-bottom:52px; }
+  .location-title { font-family:'Cormorant Garamond',serif; font-size:22px; color:#c9a84c; letter-spacing:3px; margin-bottom:4px; padding-left:4px; }
+  .location-sub { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:#e8d5a3; opacity:0.4; margin-bottom:24px; padding-left:4px; }
+  .location-divider { height:1px; background:rgba(201,168,76,0.15); margin-bottom:28px; }
+
+  .rooms-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:20px; max-width:900px; margin:0 auto; }
+
+  .room-card { background:#fff; border-radius:20px; padding:24px 20px 20px; text-align:center; box-shadow:0 8px 30px rgba(0,0,0,0.4); }
+  .room-location-badge { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:#888; margin-bottom:6px; }
+  .room-num { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:#6b5040; margin-bottom:2px; }
+  .room-name { font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:400; color:#1a0f00; margin-bottom:16px; line-height:1.2; }
+  .qr-wrap { display:flex; justify-content:center; margin-bottom:14px; }
+  .qr-wrap canvas, .qr-wrap img { border-radius:8px !important; }
+  .room-url { font-size:9px; color:#bbb; word-break:break-all; background:#f8f5f0; padding:6px 10px; border-radius:8px; letter-spacing:0.3px; }
+  .room-badge { display:inline-block; background:#1a0f00; color:#c9a84c; font-size:9px; letter-spacing:2px; text-transform:uppercase; padding:4px 12px; border-radius:20px; margin-top:10px; }
+
+  @media print {
+    body { background:#fff; padding:20px; }
+    h1, .main-sub { color:#1a0f00; }
+    .location-title { color:#6b4226; }
+    .location-sub { color:#888; }
+    .room-card { box-shadow:none; border:1px solid #e0d5c0; break-inside:avoid; }
+    .room-badge { background:#1a0f00; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Ščurek Winery</h1>
+<div class="main-sub">QR kode sob · Guest App</div>
+
+<!-- POSESTVO ŠČUREK -->
+<div class="location-block">
+  <div class="location-title" style="text-align:center">Posestvo Ščurek</div>
+  <div class="location-sub" style="text-align:center">Sobe 1–4</div>
+  <div class="location-divider"></div>
+  <div class="rooms-grid" id="posestvo"></div>
+</div>
+
+<!-- DOMAČIJA ŠČUREK -->
+<div class="location-block">
+  <div class="location-title" style="text-align:center">Domačija Ščurek</div>
+  <div class="location-sub" style="text-align:center">Sobe 1–4</div>
+  <div class="location-divider"></div>
+  <div class="rooms-grid" id="domacija"></div>
+</div>
+
+<script>
+const BASE_URL = 'https://PosestvoScurek.github.io/scurek-winery/scurek-guest-app.html';
+
+const rooms = [
+  // Posestvo Ščurek — room param p1..p4
+  { id:'p1', location:'Posestvo Ščurek', num:'Soba 1', name:'Jazbine',      param:'posestvo-1', container:'posestvo' },
+  { id:'p2', location:'Posestvo Ščurek', num:'Soba 2', name:'Dugo',         param:'posestvo-2', container:'posestvo' },
+  { id:'p3', location:'Posestvo Ščurek', num:'Soba 3', name:'Barbana',      param:'posestvo-3', container:'posestvo' },
+  { id:'p4', location:'Posestvo Ščurek', num:'Soba 4', name:'Gredič',       param:'posestvo-4', container:'posestvo' },
+  // Domačija Ščurek — room param d1..d4
+  { id:'d1', location:'Domačija Ščurek', num:'Soba 1', name:'Stara Brajda Bela', param:'domacija-1', container:'domacija' },
+  { id:'d2', location:'Domačija Ščurek', num:'Soba 2', name:'Stara Brajda Rdeča',param:'domacija-2', container:'domacija' },
+  { id:'d3', location:'Domačija Ščurek', num:'Soba 3', name:'Merlot UP',    param:'domacija-3', container:'domacija' },
+  { id:'d4', location:'Domačija Ščurek', num:'Soba 4', name:'Rebula UP',    param:'domacija-4', container:'domacija' },
+];
+
+rooms.forEach(room => {
+  const url = BASE_URL + '?room=' + room.param;
+  const shortUrl = 'scurek-winery/app?room=' + room.param;
+
+  const card = document.createElement('div');
+  card.className = 'room-card';
+  card.innerHTML = `
+    <div class="room-location-badge">${room.location}</div>
+    <div class="room-num">${room.num}</div>
+    <div class="room-name">${room.name}</div>
+    <div class="qr-wrap" id="qr-${room.id}"></div>
+    <div class="room-url">${shortUrl}</div>
+    <div class="room-badge">🏠 Guest App</div>
+  `;
+  document.getElementById(room.container).appendChild(card);
+
+  new QRCode(document.getElementById('qr-' + room.id), {
+    text: url,
+    width: 160,
+    height: 160,
+    colorDark: '#1a0f00',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.H
+  });
+});
+</script>
+</body>
+</html>
